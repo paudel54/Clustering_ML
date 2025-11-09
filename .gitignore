@@ -1,0 +1,44 @@
+# --- Data ---
+# Ignore all data folders.
+# Never commit raw or processed data to Git.
+/data/
+/data/raw/
+/data/processed/
+/data/features/
+
+# --- Models ---
+# Ignore trained models. These are large binary files.
+/models/
+*.pkl
+*.joblib
+*.h5
+
+# --- Environment & Keys ---
+# Ignore virtual environment folders.
+/venv/
+/.venv/
+/env/
+
+# Ignore environment variable files (these contain secrets!)
+*.env
+.env
+
+# --- Python ---
+# Ignore Python cache files and logs
+__pycache__/
+*.py[cod]
+*.log
+
+# --- Jupyter Notebooks ---
+# Ignore notebook checkpoints
+.ipynb_checkpoints/
+
+# --- IDE / Editor ---
+# Ignore user-specific settings for common editors
+.vscode/
+.idea/
+
+# --- Operating System ---
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
