@@ -28,8 +28,8 @@ The features are designed to capture the **signal's shape and morphology**. This
 | **Time: Amplitude** | Mean, Variance, Median | Statistics on the raw amplitude values. |
 | **Time: Shape** | Skewness, Kurtosis | Describes the "peakiness" and asymmetry of the signal distribution. |
 | **Time: Noise** | Zero-Crossing Rate (ZCR) | High ZCR indicates high-frequency noise (e.g., muscle artifacts). |
-| **Freq: Power** | Total Power, Power (0-1 Hz) | Power in the baseline band indicates **Baseline Wander**. |
-| **Freq: Power** | Power (>30 Hz) | Power in high-frequency bands indicates **Muscle Artifacts (EMG)**. |
+| **Freq: Power** | Total Power | Power in the permissible frequency band. |
+| **Freq: Power** | Power (>30 Hz) | Power in high-frequency bands to compute Muscle Artifacts (EMG). |
 
 ## Models & Evaluation
 
