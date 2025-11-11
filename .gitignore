@@ -6,6 +6,8 @@
 /data/processed/
 /data/features/
 
+/clustering_env/
+
 # --- Models ---
 # Ignore trained models. These are large binary files.
 /models/

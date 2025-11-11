@@ -1,0 +1,7 @@
+1. Create virtual environment
+
+python -m venv clustering_env
+source clustering_env/bin/activate 
+
+2. pip freeze > requirements.txt
+It will update the requirements.txt file with latest installed packages.
