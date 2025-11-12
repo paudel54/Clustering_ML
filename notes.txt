@@ -5,3 +5,10 @@ source clustering_env/bin/activate
 
 2. pip freeze > requirements.txt
 It will update the requirements.txt file with latest installed packages.
+
+
+
+
+PCA: dimensionality reduction: 
+PCA finds the directions of maximum variance in the data (principal components).
+n_components=2 keeps the first two directions, giving a 2-D projection of your 6-D feature space.
