@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOPAC Data Collection Protocol</title>
+    <style>
+        :root {
+            --color-clean: #2ecc71;
+            --color-clean-bg: #e8f8f5;
+            --color-motion: #f39c12;
+            --color-motion-bg: #fef9e7;
+            --color-emg: #e74c3c;
+            --color-emg-bg: #fdedec;
+            --color-fail: #2c3e50;
+            --color-fail-bg: #ebedef;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 1s ease;
+            overflow: hidden;
+            position: relative; /* Needed for absolute positioning of controls */
+        }
+
+        /* --- THEME CLASSES --- */
+        body.theme-clean { background: var(--color-clean-bg); color: var(--text-dark); }
+        body.theme-clean .timer-box { border-color: var(--color-clean); color: var(--color-clean); }
+        body.theme-clean .progress-fill { background-color: var(--color-clean); }
+
+        body.theme-motion { background: var(--color-motion-bg); color: var(--text-dark); }
+        body.theme-motion .timer-box { border-color: var(--color-motion); color: var(--color-motion); }
+        body.theme-motion .progress-fill { background-color: var(--color-motion); }
+
+        body.theme-emg { background: var(--color-emg-bg); color: var(--text-dark); }
+        body.theme-emg .timer-box { border-color: var(--color-emg); color: var(--color-emg); }
+        body.theme-emg .progress-fill { background-color: var(--color-emg); }
+
+        body.theme-fail { background: var(--color-fail); color: var(--text-light); }
+        body.theme-fail .timer-box { border-color: var(--text-light); color: var(--text-light); }
+        body.theme-fail .progress-fill { background-color: #95a5a6; }
+        body.theme-fail .instruction-text { color: #bdc3c7; }
+
+        /* --- LAYOUT --- */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- REDESIGNED START SCREEN --- */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Beautiful Gradient Background */
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .start-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 3.5rem;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            color: white;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .start-card h1 { 
+            margin-bottom: 1rem; 
+            font-size: 3rem; 
+            font-weight: 800; 
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, #a5c9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .start-card p.subtitle { 
+            margin-bottom: 3rem; 
+            font-size: 1.3rem; 
+            color: rgba(255,255,255,0.85); 
+            line-height: 1.6;
+        }
+
+        button.btn-start {
+            padding: 1.2rem 3.5rem;
+            font-size: 1.5rem;
+            background: white;
+            color: #1e3c72;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        button.btn-start:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            background: #ffffff;
+        }
+
+        .audio-hint {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* --- CONTROL BUTTONS (TOP RIGHT) --- */
+        .control-bar {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            display: flex;
+            gap: 15px;
+            z-index: 50;
+        }
+        
+        button.control-btn {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid currentColor;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: inherit;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button.control-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Only show controls when active */
+        .hidden { display: none !important; }
+
+        /* --- ACTIVE PROTOCOL UI --- */
+        .label-badge {
+            background: rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .activity-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .instruction-text {
+            font-size: 1.8rem;
+            margin-bottom: 3rem;
+            max-width: 800px;
+            line-height: 1.4;
+        }
+
+        .timer-box {
+            font-size: 6rem;
+            font-weight: 300;
+            border: 4px solid;
+            border-radius: 20px;
+            padding: 1rem 3rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.5);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .total-progress {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        /* --- TIMELINE BAR --- */
+        .timeline-container {
+            width: 100%;
+            height: 40px;
+            background: rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            margin-top: auto; /* Pushes to bottom if using flex col on body */
+            z-index: 20;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        /* Markers on timeline */
+        .marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .marker-label {
+            position: absolute;
+            bottom: 45px;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse-anim {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <div class="start-card">
+            <h1>Data Collection Protocol</h1>
+            <p class="subtitle">
+                15 Minute Session | 10 Activity Stages<br>
+                <span style="font-size: 0.9em; opacity: 0.7; display: block; margin-top: 10px;">
+                    Please verify that all BIOPAC electrodes are connected and the signal is clear before proceeding.
+                </span>
+            </p>
+            <button class="btn-start" onclick="startProtocol()">Start Recording</button>
+            
+            <div class="audio-hint">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
+                    <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
+                    <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 8.99 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"/>
+                </svg>
+                Audio cues & ticking enabled
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP RIGHT CONTROLS -->
+    <div class="control-bar hidden" id="control-bar">
+        <button class="control-btn" id="btn-pause" onclick="togglePause()">Pause</button>
+    </div>
+
+    <!-- ACTIVE PROTOCOL SCREEN -->
+    <div class="container hidden" id="app-container">
+        <div class="label-badge" id="current-label">Label: 0</div>
+        
+        <div class="timer-box" id="stage-timer">02:00</div>
+        
+        <div class="activity-title" id="activity-title">Resting Baseline</div>
+        
+        <div class="instruction-text" id="instruction-text">
+            Sit comfortably in a chair. Hands resting on lap. Breathe normally. Do not speak or move.
+        </div>
+
+        <div class="total-progress">
+            Total Time: <span id="total-timer">00:00</span> / 15:00
+        </div>
+    </div>
+
+    <!-- TIMELINE VISUALIZATION -->
+    <div class="timeline-container" id="timeline">
+        <div class="progress-fill" id="progress-bar"></div>
+        <!-- Markers generated by JS -->
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const TIME_MULTIPLIER = 60; 
+
+        // Updated Protocol (15 Minutes Total)
+        const protocol = [
+            {
+                duration: 2,
+                class: 'clean',
+                label: 0,
+                title: 'Resting Baseline',
+                desc: 'Sit comfortably in a chair. Hands resting on lap. Breathe normally. Do not speak or move.'
+            },
+            {
+                duration: 1,
+                class: 'motion',
+                label: 1,
+                title: 'Phone Scrolling',
+                desc: 'Hold mobile phone. Scroll through reels continuously. Use normal thumb movements.'
+            },
+            {
+                duration: 2,
+                class: 'clean',
+                label: 0,
+                title: 'Deep Breathing',
+                desc: 'Put phone down. Do not move body. Inhale deeply (4s), exhale (4s). Focus on rhythmic chest expansion.'
+            },
+            {
+                duration: 1,
+                class: 'emg',
+                label: 2,
+                title: 'Body Stiffness',
+                desc: 'Make the entire body rigid. Clench fists, tighten biceps, and stiffen torso. Hold tension.'
+            },
+            {
+                duration: 2,
+                class: 'clean',
+                label: 0,
+                title: 'Resting Recovery',
+                desc: 'Release all tension immediately. Exhale sharply. Return to normal breathing. Sit still.'
+            },
+            {
+                duration: 1,
+                class: 'fail',
+                label: 3,
+                title: 'Sensor Loose',
+                desc: 'Do not unplug. Gently wiggle sensor clip or peel tape slightly to make poor contact. Aim for chaotic spikes.'
+            },
+            {
+                duration: 2,
+                class: 'clean',
+                label: 0,
+                title: 'Deep Breathing',
+                desc: 'Secure sensor back in place. Resume deep, rhythmic breathing (Inhale 4s / Exhale 4s).'
+            },
+            {
+                duration: 1,
+                class: 'motion',
+                label: 1,
+                title: 'Chair Restlessness',
+                desc: 'Shift weight from side to side, cross/uncross legs, lean forward/back. Simulate discomfort.'
+            },
+            {
+                duration: 2,
+                class: 'clean',
+                label: 0,
+                title: 'Pre-Fail Baseline',
+                desc: 'Stop moving. Sit perfectly still. Ensure signal has stabilized.'
+            },
+            {
+                duration: 1,
+                class: 'fail',
+                label: 3,
+                title: 'Full Disconnect',
+                desc: 'Unplug the sensor lead completely. Remove clip or unsnap lead. Drop wire on table.'
+            }
+        ];
+
+        // Calculate total minutes for timeline visualization
+        const TOTAL_MINUTES = protocol.reduce((acc, curr) => acc + curr.duration, 0);
+
+        // --- STATE VARIABLES ---
+        let currentStageIndex = 0;
+        let stageTimeRemaining = protocol[0].duration * TIME_MULTIPLIER;
+        let totalTimeElapsed = 0;
+        let totalDuration = TOTAL_MINUTES * TIME_MULTIPLIER;
+        let intervalId = null;
+        let isPaused = false;
+        
+        // --- AUDIO CONTEXT (For Beeps & Ticks) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'switch') {
+                // High pitched double beep for switch
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'end') {
+                // Long low beep for end
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 2);
+            }
+        }
+
+        function playTick(isWarning = false) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // "Tick" sound - high pitch, very short, low volume
+            oscillator.type = 'triangle'; 
+            // Higher pitch (1500Hz) for warning, normal (1200Hz) otherwise
+            oscillator.frequency.setValueAtTime(isWarning ? 1500 : 1200, audioCtx.currentTime);
+            
+            // Envelope: Instant attack, fast decay. Slightly louder for warning.
+            gainNode.gain.setValueAtTime(isWarning ? 0.08 : 0.05, audioCtx.currentTime); 
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.03);
+        }
+
+        // --- DOM ELEMENTS ---
+        const body = document.body;
+        const elLabel = document.getElementById('current-label');
+        const elStageTimer = document.getElementById('stage-timer');
+        const elActivity = document.getElementById('activity-title');
+        const elInstruction = document.getElementById('instruction-text');
+        const elTotalTimer = document.getElementById('total-timer');
+        const elProgressBar = document.getElementById('progress-bar');
+        const elTimeline = document.getElementById('timeline');
+        const elBtnPause = document.getElementById('btn-pause');
+        const elControlBar = document.getElementById('control-bar');
+
+        // --- INITIALIZATION ---
+        function initTimeline() {
+            let accumTime = 0;
+            protocol.forEach((stage, index) => {
+                // Create marker on timeline
+                const markerLeft = (accumTime / TOTAL_MINUTES) * 100; 
+                if (index > 0) {
+                    const marker = document.createElement('div');
+                    marker.className = 'marker';
+                    marker.style.left = `${markerLeft}%`;
+                    elTimeline.appendChild(marker);
+                    
+                    const label = document.createElement('div');
+                    label.className = 'marker-label';
+                    label.innerText = `${accumTime}m`;
+                    label.style.left = `${markerLeft}%`;
+                    elTimeline.appendChild(label);
+                }
+                accumTime += stage.duration;
+            });
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateUI() {
+            const stage = protocol[currentStageIndex];
+            
+            // Update Text
+            elLabel.innerText = `Label ID: ${stage.label} (${stage.class.toUpperCase()})`;
+            elActivity.innerText = stage.title;
+            elInstruction.innerText = stage.desc;
+            
+            // Update Timer Display
+            elStageTimer.innerText = formatTime(stageTimeRemaining);
+            elTotalTimer.innerText = formatTime(totalTimeElapsed) + ` / ${TOTAL_MINUTES}:00`;
+            
+            // Update Progress Bar
+            const progressPercent = (totalTimeElapsed / totalDuration) * 100;
+            elProgressBar.style.width = `${progressPercent}%`;
+
+            // Update Theme
+            body.className = `theme-${stage.class}`;
+
+            // Animation for breathing
+            if (stage.title === 'Deep Breathing') {
+                elActivity.classList.add('pulse-anim');
+            } else {
+                elActivity.classList.remove('pulse-anim');
+            }
+        }
+
+        function startProtocol() {
+            // Wake Lock Request (Prevent screen sleeping)
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(err => console.log(err));
+            }
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            elControlBar.classList.remove('hidden');
+            
+            initTimeline();
+            updateUI();
+            playBeep('switch'); // Start beep
+            
+            // Play first tick immediately
+            playTick(false);
+
+            startInterval();
+        }
+
+        function startInterval() {
+            intervalId = setInterval(() => {
+                // Tick Logic
+                stageTimeRemaining--;
+                totalTimeElapsed++;
+
+                // Play tick every second
+                if (stageTimeRemaining >= 0) {
+                     // Warning phase: Last 10 seconds
+                     if (stageTimeRemaining <= 10) {
+                         // High pitch warning tick
+                         playTick(true);
+                     } else {
+                         // Normal tick
+                         playTick(false);
+                     }
+                }
+
+                // Check Stage Transition
+                if (stageTimeRemaining < 0) {
+                    currentStageIndex++;
+                    
+                    // Check if Protocol Complete
+                    if (currentStageIndex >= protocol.length) {
+                        endProtocol();
+                        return;
+                    }
+
+                    // New Stage Setup
+                    stageTimeRemaining = protocol[currentStageIndex].duration * TIME_MULTIPLIER; // Reset stage timer
+                    playBeep('switch'); // Transition beep
+                }
+
+                updateUI();
+
+            }, 1000);
+        }
+
+        function togglePause() {
+            if (isPaused) {
+                // Resume
+                isPaused = false;
+                elBtnPause.innerText = "Pause";
+                startInterval();
+            } else {
+                // Pause
+                isPaused = true;
+                clearInterval(intervalId);
+                elBtnPause.innerText = "Resume";
+            }
+        }
+
+        function endProtocol() {
+            clearInterval(intervalId);
+            body.className = 'theme-fail'; // Dark theme for end
+            elActivity.innerText = "Protocol Complete";
+            elInstruction.innerText = "Stop recording. Save your data.";
+            elStageTimer.innerText = "DONE";
+            elProgressBar.style.width = "100%";
+            elControlBar.style.display = 'none'; // Hide controls
+            playBeep('end');
+        }
+
+    </script>
+</body>
+</html>

@@ -10,5 +10,39 @@ It will update the requirements.txt file with latest installed packages.
 
 
 PCA: dimensionality reduction: 
+We started 6 time-domain features per ECG window (mean, variance, median, skewness, kurtosis, zcr). 
+That's 6-dimensional space is impossible to visualize directly. 
+So, PCA found the two directions (linear combinations of these features) that explain the most variance across all windows.
 PCA finds the directions of maximum variance in the data (principal components).
 n_components=2 keeps the first two directions, giving a 2-D projection of your 6-D feature space.
+
+
+Explained variance ratio: 
+PC1 explains 55 % of the total variation.
+PC2 explains 25 %.
+Together 80 % of what’s happening in your 6-D feature space is visible in this 2-D plot.
+So, your 2D visualization preserves most of the information — a strong indication your features capture the main patterns.
+
+SCORES::
+| Silhouette Value | Interpretation                                       |
+| ---------------- | ---------------------------------------------------- |
+| **+1**           | Perfectly separated clusters (very strong structure) |
+| **0.7–1.0**      | Excellent clustering                                 |
+| **0.5–0.7**      | Good, well-separated clusters                        |
+| **0.25–0.5**     | Acceptable but clusters overlap                      |
+| **0–0.25**       | Weak structure, not very meaningful                  |
+| **< 0**          | Wrong clustering; samples assigned to wrong clusters |
+
+
+High silhouette (~1) means:
+→ points are tightly grouped in their cluster
+→ and far from other clusters
+→ excellent, meaningful grouping
+
+Silhouette near 0 means:
+→ clusters overlap
+→ not very meaningful
+
+Negative silhouette means:
+→ many points are closer to another cluster than their own
+→ bad clustering
