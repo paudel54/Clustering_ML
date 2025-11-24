@@ -46,3 +46,28 @@ Silhouette near 0 means:
 Negative silhouette means:
 → many points are closer to another cluster than their own
 → bad clustering
+
+
+#Recording on: 2025-11-22 18:28:21.132
+
+Silhouette is distance-dependent → unscaled data distorts results.
+
+✔ Best k is the one with highest silhouette
+
+Usually:
+
+k = 2 → measures "clean vs noise" separation
+
+k = 3–4 → captures different noise types (motion, sensor loose, disconnect)
+
+k > 8 → almost always meaningless overfitting
+
+✔ Typical ECG noise clustering silhouette values
+
+Good separation: 0.35–0.60
+
+Medium: 0.20–0.35
+
+Poor: <0.20
+
+ECG signals are messy → don’t expect 0.8 like textbook data.
